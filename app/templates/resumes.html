@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>All Resumes</h1>
+
+<!-- Category Filter -->
+<form method="get" action="{{ url_for('main.list_resumes') }}">
+    <label for="category">Filter by Category:</label>
+    <select name="category" id="category" onchange="this.form.submit()">
+        <option value="" {% if not selected_category %}selected{% endif %}>All Categories</option>
+        {% for category in categories %}
+        <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>{{ category }}</option>
+        {% endfor %}
+    </select>
+</form>
+
+<table class="resume-table">
+    <thead>
+        <tr>
+            <th>Resume ID</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for resume in resumes %}
+        <tr>
+            <td>{{ resume['ID'] }}</td>
+            <td>{{ resume['Category'] }}</td>
+            <td>{{ resume['snippet'] }}</td>
+            <td>
+                <a href="{{ url_for('main.view_resume', resume_id=resume['ID']) }}" class="btn">View Resume</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination Controls -->
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="{{ url_for('main.list_resumes', page=page-1) }}" class="btn">Previous</a>
+    {% endif %}
+    <span>Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="{{ url_for('main.list_resumes', page=page+1) }}" class="btn">Next</a>
+    {% endif %}
+</div>
+
+<a href="{{ url_for('main.home') }}" class="btn">Back to Dashboard</a>
+{% endblock %}

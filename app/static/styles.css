@@ -47,3 +47,80 @@ main {
 .btn:hover {
     background-color: #0056b3;
 }
+
+.resume-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.resume-table th, .resume-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.resume-table th {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.resume-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.resume-table a.btn {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 3px;
+}
+
+.resume-table a.btn:hover {
+    background-color: #0056b3;
+}
+
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination a.btn {
+    display: inline-block;
+    margin: 0 5px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.pagination a.btn:hover {
+    background-color: #0056b3;
+}
+
+.pagination span {
+    display: inline-block;
+    margin: 0 10px;
+    font-weight: bold;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+form label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+form select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+form select:hover {
+    border-color: #007bff;
+}

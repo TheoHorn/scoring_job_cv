@@ -10,6 +10,7 @@
     <nav>
         <a href="{{ url_for('main.home') }}">Dashboard</a>
         <a href="{{ url_for('main.chart') }}">Visualisation</a> 
+        <a href="{{url_for('main.list_resumes')}}">Resumes</a>
     </nav>
     <main>
         {% block content %}{% endblock %}
