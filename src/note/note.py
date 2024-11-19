@@ -33,7 +33,7 @@ def get_full_coordinates(geolocator,city, region, country):
 def calculate_month_difference(date1, date2):
     date1 = datetime.strptime(date1, "%m/%Y")
     date2 = datetime.strptime(date2, "%m/%Y")
-    return abs((date2.year - date1.year) * 12 + date2.month - date1.month)
+    return (date2.year - date1.year) * 12 + date2.month - date1.month
 
 ### Calculate the difference between two years of experience
 def calculate_experience_difference(cv_experience, job_experience):
@@ -55,7 +55,7 @@ def order_resume(resumes,offer):
         print(f"Distance: {distance_km} km")
         print(f"Month difference: {month_difference}")
         print(f"Experience difference: {experience_difference}")
-        score = distance_km/100 + month_difference + experience_difference
+        score = -distance_km/50 + month_difference + experience_difference
         print(f"Score: {score}")
         print("\n")
 

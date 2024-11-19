@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Visualisation</h1>
+<canvas id="chart"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Catégorie A', 'Catégorie B'],
+            datasets: [{
+                label: 'Données',
+                data: [12, 19],
+                backgroundColor: ['#FF6384', '#36A2EB'],
+            }]
+        },
+        options: {}
+    });
+</script>
+{% endblock %}
