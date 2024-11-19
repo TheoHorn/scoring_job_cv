@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Resume Viewer</h1>
+
+<!-- Resume HTML Content -->
+<div class="resume-container">
+    {{ resume_html|safe }}
+</div>
+
+<a href="{{ url_for('main.home') }}" class="btn">Back to Home</a>
+{% endblock %}
