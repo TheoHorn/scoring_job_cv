@@ -35,7 +35,7 @@
                 <td>{{ job['location'] }}</td>
                 <td>{{ job['experience_years'] }} years</td>
                 <td>{{ job['start_date'] }}</td>
-                <td><a href="{{ url_for('main.view_job', job_id=job['job_id']) }}">View</a></td>
+                <td><a href="{{ url_for('main.view_job', job_id=job['job_id']) }}" class="btn">View</a></td>
             </tr>
             {% endfor %}
         </tbody>

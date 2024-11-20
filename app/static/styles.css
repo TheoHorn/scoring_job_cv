@@ -207,3 +207,35 @@ main {
 .job-details ul li strong {
     color: #333;
 }
+
+/* Chart */
+.resume-list {
+    margin: 20px 0;
+}
+
+.resume-item {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.resume-item h3 {
+    margin: 0 0 5px;
+    color: #333;
+}
+
+.score-details {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+.chart-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+canvas {
+    max-width: 100%;
+}

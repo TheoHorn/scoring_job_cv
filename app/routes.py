@@ -7,6 +7,7 @@ main = Blueprint('main', __name__)
 # Loda data
 resumes = pd.read_csv('data/Resume.csv', header=0)
 offers = pd.read_csv('data/final_job_offers.csv', header=0)
+#matches = pd.read_csv('data/matches.csv', header=0)
 
 # Parse columns as a list if necessary
 columns_to_parse = ['job_category','profile','education_speciality','languages','language_level','soft_skills','technical_skills','certifications','platform']
@@ -140,3 +141,28 @@ def view_job(job_id):
 
     return render_template('job.html', job=job)
 
+@main.route('/jobs/<int:job_id>/analysis')
+def job_analysis(job_id):
+    # Fetch job-related resumes from the dataframe
+    relevant_resumes = matches[matches['job_offer_id'] == job_id]
+    
+    # Sort by global score and select top 5
+    top_resumes = relevant_resumes.sort_values(by='score_global', ascending=False).head(5)
+    
+    # Convert to dictionary format for easier rendering in the template
+    top_resumes = top_resumes.to_dict(orient='records')
+
+    # Generate thresholds for score visualization
+    thresholds = {
+        "Excellent": 90,
+        "Great": 75,
+        "Good": 60,
+        "Bad": 0
+    }
+
+    return render_template(
+        'job_analysis.html',
+        job_id=job_id,
+        resumes=top_resumes,
+        thresholds=thresholds
+    )

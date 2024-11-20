@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Analysis for Job {{ job_id }}</h1>
+    <div class="resume-list">
+        {% for resume in resumes %}
+        <div class="resume-item">
+            <h3>Resume ID: {{ resume['resume_id'] }} - Score: {{ resume['score_global'] }}</h3>
+            <p class="score-details">Details: {{ resume['score_details'] | join(', ') }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="chart-container">
+        <h2>Score Visualization</h2>
+        <canvas id="scoreChart"></canvas>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!--
+<script>
+    const resumes = {{ resumes|tojson }};
+    const thresholds = {{ thresholds|tojson }};
+
+    const labels = resumes.map(resume => `Resume ${resume.resume_id}`);
+    const scores = resumes.map(resume => resume.score_global);
+
+    const thresholdColors = scores.map(score => {
+        if (score >= thresholds.Excellent) return 'rgba(0, 128, 0, 0.7)'; // Excellent: Green
+        if (score >= thresholds.Great) return 'rgba(0, 0, 255, 0.7)';    // Great: Blue
+        if (score >= thresholds.Good) return 'rgba(255, 165, 0, 0.7)';  // Good: Orange
+        return 'rgba(255, 0, 0, 0.7)';                                  // Bad: Red
+    });
+
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Global Score',
+                data: scores,
+                backgroundColor: thresholdColors,
+                borderColor: 'rgba(0, 0, 0, 0.1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Score'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+</script>-->
+{% endblock %}
