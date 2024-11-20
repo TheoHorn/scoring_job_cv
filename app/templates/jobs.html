@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="filter-container">
+    <form method="get" action="{{ url_for('main.list_jobs') }}">
+        <label for="category">Category:</label>
+        <input type="text" id="category" name="category" value="{{ category_filter }}">
+        
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" value="{{ location_filter }}">
+        
+        <button type="submit">Filter</button>
+        <a href="{{ url_for('main.list_jobs') }}" class="btn-clear">Clear Filters</a>
+    </form>
+</div>
+
+<div class="job-list-container">
+    <h1>Job Offers</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Experience</th>
+                <th>Start Date</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr>
+                <td>{{ job['job_title'] }}</td>
+                <td>{{ job['job_category'] }}</td>
+                <td>{{ job['location'] }}</td>
+                <td>{{ job['experience_years'] }} years</td>
+                <td>{{ job['start_date'] }}</td>
+                <td><a href="{{ url_for('main.view_job', job_id=job['job_id']) }}">View</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="{{ url_for('main.list_jobs', page=page-1, category=category_filter, location=location_filter) }}">Previous</a>
+        {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+        <a href="{{ url_for('main.list_jobs', page=page+1, category=category_filter, location=location_filter) }}">Next</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

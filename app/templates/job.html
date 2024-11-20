@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="job-details-container">
+    <h1>{{ job['job_title'] }}</h1>
+    <p class="category">{{ job['job_category'] }}</p>
+
+    <div class="job-details">
+        <h2>Basic Information</h2>
+        <ul>
+            <li><strong>Job ID:</strong> {{ job['job_id'] }}</li>
+            <li><strong>Profile:</strong> {{ job['profile'] }}</li>
+            <li><strong>Education Level:</strong> {{ job['education_level'] }}</li>
+            <li><strong>Education Specialty:</strong> {{ job['education_speciality'] }}</li>
+            <li><strong>Experience Required:</strong> {{ job['experience_years'] }} years</li>
+            <li><strong>Location:</strong> {{ job['location'] }}</li>
+            <li><strong>Start Date:</strong> {{ job['start_date'] }}</li>
+        </ul>
+
+        <h2>Languages</h2>
+        <ul>
+            <li><strong>Languages:</strong> {{ job['languages'] }}</li>
+            <li><strong>Language Level:</strong> {{ job['language_level'] }}</li>
+        </ul>
+
+        <h2>Skills</h2>
+        <ul>
+            <li><strong>Soft Skills:</strong> {{ job['soft_skills'] }}</li>
+            <li><strong>Technical Skills:</strong> {{ job['technical_skills'] }}</li>
+        </ul>
+
+        <h2>Certifications & Platform</h2>
+        <ul>
+            <li><strong>Certifications:</strong> {{ job['certifications'] }}</li>
+            <li><strong>Platform:</strong> {{ job['platform'] }}</li>
+        </ul>
+    </div>
+
+    <a href="{{ url_for('main.list_jobs') }}" class="btn">Back to Job Offers</a>
+</div>
+{% endblock %}

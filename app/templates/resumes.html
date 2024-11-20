@@ -4,17 +4,19 @@
 <h1>All Resumes</h1>
 
 <!-- Category Filter -->
-<form method="get" action="{{ url_for('main.list_resumes') }}">
-    <label for="category">Filter by Category:</label>
-    <select name="category" id="category" onchange="this.form.submit()">
-        <option value="" {% if not selected_category %}selected{% endif %}>All Categories</option>
-        {% for category in categories %}
-        <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>{{ category }}</option>
-        {% endfor %}
-    </select>
-</form>
+<div class="filter-container">
+    <form method="get" action="{{ url_for('main.list_resumes') }}">
+        <label for="category">Filter by Category:</label>
+        <select name="category" id="category" onchange="this.form.submit()">
+            <option value="" {% if not selected_category %}selected{% endif %}>All Categories</option>
+            {% for category in categories %}
+            <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
 
-<table class="resume-table">
+<table class="table">
     <thead>
         <tr>
             <th>Resume ID</th>

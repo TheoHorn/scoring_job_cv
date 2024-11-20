@@ -1,28 +1,58 @@
+/* General Styles */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
+    background-color: #f5f5f5;
 }
+
 nav {
     background-color: #333;
     color: white;
     padding: 1em;
 }
+
 nav a {
     color: white;
     text-decoration: none;
     margin-right: 1em;
 }
+
 main {
     padding: 2em;
 }
 
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 10px 15px;
+    color: #fff;
+    background-color: #007bff;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+/* Containers */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Resume Section */
 .resume-container {
     padding: 20px;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 5px;
-    font-family: 'Arial', sans-serif;
     line-height: 1.6;
 }
 
@@ -34,93 +64,146 @@ main {
     margin: 10px 0;
 }
 
-.btn {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    margin-top: 20px;
-}
-
-.btn:hover {
-    background-color: #0056b3;
-}
-
-.resume-table {
+/* Tables */
+.table {
     width: 100%;
     border-collapse: collapse;
     margin: 20px 0;
 }
 
-.resume-table th, .resume-table td {
+.table th, 
+.table td {
     border: 1px solid #ddd;
     padding: 10px;
     text-align: left;
 }
 
-.resume-table th {
+.table th {
     background-color: #f4f4f4;
     color: #333;
 }
 
-.resume-table tr:hover {
+.table tr:hover {
     background-color: #f1f1f1;
 }
 
-.resume-table a.btn {
-    padding: 5px 10px;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 3px;
-}
-
-.resume-table a.btn:hover {
-    background-color: #0056b3;
-}
-
+/* Pagination */
 .pagination {
     margin-top: 20px;
     text-align: center;
 }
 
-.pagination a.btn {
-    display: inline-block;
+.pagination a {
     margin: 0 5px;
-    padding: 10px 20px;
+    padding: 6px 12px;
+    text-decoration: none;
+    color: white;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background-color: #007bff;
+}
+
+.pagination a.active {
+    font-weight: bold;
     background-color: #007bff;
     color: white;
-    text-decoration: none;
-    border-radius: 5px;
 }
 
-.pagination a.btn:hover {
+.pagination a:hover {
     background-color: #0056b3;
+    color: white;
 }
 
-.pagination span {
-    display: inline-block;
-    margin: 0 10px;
+/* Filter Section */
+.filter-container {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-container label {
     font-weight: bold;
+    color: #444;
 }
 
-form {
+.filter-container input, 
+.filter-container select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.filter-container button {
+    padding: 6px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.filter-container .btn-clear {
+    padding: 6px 12px;
+    background-color: #e0e0e0;
+    color: #333;
+    text-decoration: none;
+    border-radius: 3px;
+}
+
+.filter-container button:hover,
+.filter-container .btn-clear:hover {
+    opacity: 0.8;
+}
+
+/* Job Details */
+.job-details-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.job-details-container h1 {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.job-details-container .category {
+    font-size: 16px;
+    color: #555;
+    font-weight: bold;
     margin-bottom: 20px;
 }
 
-form label {
-    font-weight: bold;
-    margin-right: 10px;
+.job-details h2 {
+    font-size: 20px;
+    color: #444;
+    margin-top: 20px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
 }
 
-form select {
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+.job-details ul {
+    list-style: none;
+    padding: 0;
 }
 
-form select:hover {
-    border-color: #007bff;
+.job-details ul li {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #666;
+}
+
+.job-details ul li strong {
+    color: #333;
 }
