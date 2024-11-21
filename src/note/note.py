@@ -46,9 +46,14 @@ def order_resume(resumes,offer):
     offer_location = offer[2].split(", ")
     offer_location = get_full_coordinates(geolocator, offer_location[0], offer_location[1], offer_location[2])
     for resume in resumes:
+
+        ######
         resume_location = resume[2].split(", ")
         resume_location = get_full_coordinates(geolocator, resume_location[0], resume_location[1], resume_location[2])
         distance_km = geodesic(offer_location, resume_location).kilometers
+
+
+        ######
         month_difference = calculate_month_difference(resume[1], offer[1])
         experience_difference = calculate_experience_difference(resume[0], offer[0])
         print(f"Resume: {resume}")
