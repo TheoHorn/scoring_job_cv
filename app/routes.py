@@ -51,23 +51,36 @@ def get_statistics(cv_id, job_offer_id):
         "industry_relevance": industry_relevance
     }
 
-@main.route('/chart', methods=['GET', 'POST'])
-def chart():
-    if request.method == 'POST':
-        # Récupérez les IDs envoyés par le formulaire
-        cv_id = request.form.get('cv_id')
-        job_offer_id = request.form.get('job_offer_id')
-
-        # Calculer les statistiques
-        stats = get_statistics(cv_id, job_offer_id)
-
-        # Si une erreur existe, renvoyer l'erreur
-        if "error" in stats:
-            return jsonify(stats), 400
-
-        return jsonify(stats)
-
+@main.route('/')
+def index():
     return render_template('chart.html')
+
+@main.route('/chart', methods=['POST'])
+def chart():
+    try:
+        # Get IDs from the request
+        cv_id = int(request.form['cv_id'])
+        job_offer_id = int(request.form['job_offer_id'])
+
+        # Fetch the corresponding rows
+        candidate = candidates_df[candidates_df['candidate_id'] == cv_id].iloc[0]
+        job = job_offers_df[job_offers_df['job_id'] == job_offer_id].iloc[0]
+
+        # Calculate scores
+        detailed_scores, max_scores, global_score = calculate_global_score(candidate, job)
+
+        # Structure the data for the frontend
+        response_data = {
+            "skills_match": detailed_scores["technical_skills"],
+            "experience_overlap": detailed_scores["experience"],
+            "education_match": detailed_scores["education"],
+            "industry_relevance": detailed_scores["job_description"],
+            "global_score": global_score,
+        }
+
+        return jsonify(response_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @main.route('/resumes')
 def list_resumes():
