@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Upload a Job Offer</h1>
+
+    <!-- Formulaire pour télécharger l'offre (PDF uniquement) -->
+    <form action="{{ url_for('main.add_offer') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+        <label for="file-upload" class="file-upload-label">Drag and drop a job offer file here</label>
+        <input type="file" id="file-upload" name="file" class="input-file" accept=".pdf" required />
+        <button type="submit" class="submit-btn">Submit Job Offer</button>
+    </form>
+
+{% endblock %}

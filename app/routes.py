@@ -304,19 +304,96 @@ def score():
         # Render the page with the extracted data
     return render_template('score.html', result=result)
 
+def analyze_job_offer_with_cohere(offer_text, job_id):
+    prompt = f"""
+    You are an expert job posting analyzer. Your task is to analyze the following job posting and extract relevant details to create a structured dataset for matching with candidate resumes.
 
-@main.route('/resumes/<int:resume_id>')
-def view_resume(resume_id):
-    # Filter the DataFrame to find the resume by ID
-    resume = resumes[resumes['ID'] == resume_id].to_dict(orient='records')
-    resume_row = resumes[resumes['ID'] == resume_id]
-    print(resume)
-    if resume_row.empty:
-        abort(404)  # Return a 404 error if no match is found
-    
-    # Extract the HTML representation
-    resume_html = resume_row.iloc[0]['Resume_html']
-    return render_template('resume.html', resume_html=resume_html, resume=resume[0])
+    Extract the following details:
+    - Job ID: Unique identifier for the job posting.
+    - Job Title: Full title of the job.
+    - Job Category: Categorize the job into key domains such as "Data Science", "Healthcare", "Finance", etc.
+    - Profile: List general profiles required (e.g., "Graduate Student", "Engineer", "Technician", "Manager").
+    - Education Level: Minimum academic level required (e.g., "Bachelor's", "Master's", "PhD","BUT","DUT").
+    - Education Speciality: Extract academic specialities explicitly mentioned or implied in the job posting.Only include existing and relevant fields of study (e.g., "Computer Science", "Marketing", "Data Science").Avoid vague or non-academic terms.
+    - Experience Years: Minimum number of years of experience required explicitly mentioned.
+    - Languages: List languages required for the job explicitly mentioned.
+    - Language Levels: Proficiency level for each language. It should be one of these : "Beginner", "Intermediate", "Advanced".
+    - Start Date: Mention the start date or specify if it’s "Immediate" or "ASAP".
+    - Soft Skills: List key soft skills required (e.g., "Teamwork", "Communication").
+    - Technical Skills: List key technical skills required (e.g., "Python", "Cloud Computing").
+    - Certifications: Extract recognized and standard professional certifications explicitly mentioned in the job posting. Include certifications like "AWS Certified Solutions Architect", "PMP Certification", "EMDR Certification", "Licensed to practice law". Ignore generic terms or unverified certifications.
+    - Location: Job location in "City, State, Country" format.
+
+    Job Information: {offer_text}
+
+    Provide the output in this JSON format:
+    {{
+        "job_id": "{job_id}",
+        "job_title": "value",
+        "job_category": ["category1", "category2", ...],
+        "profile": ["profile1", "profile2", ...],
+        "education_level": "value",
+        "education_speciality": ["speciality1", "speciality2", ...],
+        "experience_years": number,
+        "languages": ["language1", "language2", ...],
+        "language_level": ["level1", "level2", ...],
+        "start_date": "value",
+        "soft_skills": ["soft_skill1", "soft_skill2", ...],
+        "technical_skills": ["technical_skill1", "technical_skill2", ...],
+        "certifications": ["certification1", "certification2", ...],
+        "location": "City, State, Country"
+    }}
+    """
+    response = co.generate(
+        model="command-xlarge-nightly",
+        prompt=prompt,
+        max_tokens=500,
+        temperature=0.7
+    )
+    raw_text = response.generations[0].text.strip()
+    return clean_response(raw_text)
+
+# Add job offer to the CSV table (same as you already implemented)
+def add_job_offer_to_table(offer_text, table_path):
+    if os.path.exists(table_path):
+        df = pd.read_csv(table_path)
+        next_id = df["job_id"].max() + 1
+    else:
+        print(f"{table_path} does not exist. Creating a new table.")
+        next_id = 1
+        columns = [
+            "job_id", "job_title", "job_category", "profile", "education_level",
+            "education_speciality", "experience_years", "languages", "language_level",
+            "start_date", "soft_skills", "technical_skills", "certifications", "location"
+        ]
+        df = pd.DataFrame(columns=columns)
+
+    response_raw = analyze_job_offer_with_cohere(offer_text, job_id=next_id)
+
+    df = pd.concat([df, pd.DataFrame([response_raw])], ignore_index=True)
+    df.to_csv(table_path, index=False)
+    print(f"Job offer successfully added to {table_path}.")
+
+# Route to show the offer submission form
+@main.route('/offers', methods=['GET', 'POST'])
+def offers():
+    return render_template('offers.html')
+
+# Route to handle the form submission and add job offer to the CSV
+@main.route('/add_offer', methods=['POST'])
+def add_offer():
+    file = request.files.get('file')
+
+    if file :
+        # Ajouter l'offre au fichier CSV sans avoir besoin d'extraction manuelle
+        table_path = 'data/final_job_offers.csv'
+        # Tu peux directement envoyer un texte d'offre vide (ou autre traitement si nécessaire)
+        add_job_offer_to_table(file, table_path)
+
+        # Rediriger vers la page des offres après l'ajout
+        return redirect(url_for('main.offers'))
+
+    return render_template('offers.html', error="Only PDF files are allowed.")  # Afficher une erreur si ce n'est pas un PDF
 
 
 @main.route('/resumes/<int:resume_id>/matching')
