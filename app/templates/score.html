@@ -1,0 +1,126 @@
+<!-- templates/matching.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Resume/Offer Matching</h1>
+
+  <form method="POST" enctype="multipart/form-data" class="upload-form">
+    <label for="pdf">Upload your CV:</label>
+    <input type="file" name="pdf" id="pdf" required class="input-file">
+    <button type="submit" class="submit-btn">Submit</button>
+  </form>
+
+  {% if result %}
+    <h2>Extracted Information:</h2>
+    <div class="result-list">
+      <ul>
+        <li><strong>Candidate ID:</strong> {{ result.candidate_id }}</li>
+        <li><strong>Education School:</strong> {{ result.education_school }}</li>
+        <li><strong>Education Speciality:</strong> {{ result.education_speciality }}</li>
+        <li><strong>Education Level:</strong> {{ result.education_level }}</li>
+        <li><strong>Education Degree:</strong> {{ result.education_degree }}</li>
+        <li><strong>Experience Years:</strong> {{ result.experience_years }}</li>
+        <li><strong>Languages Known:</strong> {{ result.language }}</li>
+        <li><strong>Language Proficiency:</strong> {{ result.language_level }}</li>
+        <li><strong>Technical Skills:</strong> {{ result.technical_skills }}</li>
+        <li><strong>Soft Skills:</strong> {{ result.soft_skills }}</li>
+        <li><strong>Current Position:</strong> {{ result.current_position }}</li>
+        <li><strong>Location:</strong> {{ result.location }}</li>
+        <li><strong>Location Available:</strong> {{ result.location_available }}</li>
+        <li><strong>Certifications:</strong> {{ result.certifications_title }}</li>
+        <li><strong>Hobbies:</strong> {{ result.hobbies }}</li>
+        <li><strong>Volunteer Activities:</strong> {{ result.volunteer_activities }}</li>
+        <li><strong>School Projects:</strong> {{ result.school_projects }}</li>
+        <li><strong>Availability:</strong> {{ result.availability }}</li>
+      </ul>
+    </div>
+  {% endif %}
+  
+  <a href="{{ url_for('main.home') }}" class="btn">Back to Home</a>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .upload-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px 0;
+    }
+
+    .input-file {
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .submit-btn {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .submit-btn:hover {
+      background-color: #45a049;
+    }
+
+    .result-list {
+      margin: 20px auto;
+      max-width: 800px;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .result-list ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    .result-list li {
+      padding: 8px;
+      margin: 5px 0;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+    }
+
+    .result-list li strong {
+      color: #333;
+    }
+
+    .btn {
+      display: block;
+      width: 200px;
+      margin: 20px auto;
+      text-align: center;
+      padding: 10px;
+      background-color: #2196F3;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    .btn:hover {
+      background-color: #1976D2;
+    }
+  </style>
+
+{% endblock %}
