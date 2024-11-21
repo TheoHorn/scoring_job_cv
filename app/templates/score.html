@@ -1,0 +1,38 @@
+<!-- templates/matching.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Resume/Offer Matching</h1>
+
+  <form method="POST" enctype="multipart/form-data">
+    <label for="pdf">Upload your CV:</label>
+    <input type="file" name="pdf" id="pdf" required>
+    <button type="submit">Submit</button>
+  </form>
+
+  {% if result %}
+    <h2>Extracted Information:</h2>
+    <ul>
+      <li><strong>Candidate ID:</strong> {{ result.candidate_id }}</li>
+      <li><strong>Education School:</strong> {{ result.education_school }}</li>
+      <li><strong>Education Speciality:</strong> {{ result.education_speciality }}</li>
+      <li><strong>Education Level:</strong> {{ result.education_level }}</li>
+      <li><strong>Education Degree:</strong> {{ result.education_degree }}</li>
+      <li><strong>Experience Years:</strong> {{ result.experience_years }}</li>
+      <li><strong>Languages Known:</strong> {{ result.language }}</li>
+      <li><strong>Language Proficiency:</strong> {{ result.language_level }}</li>
+      <li><strong>Technical Skills:</strong> {{ result.technical_skills }}</li>
+      <li><strong>Soft Skills:</strong> {{ result.soft_skills }}</li>
+      <li><strong>Current Position:</strong> {{ result.current_position }}</li>
+      <li><strong>Location:</strong> {{ result.location }}</li>
+      <li><strong>Location Available:</strong> {{ result.location_available }}</li>
+      <li><strong>Certifications:</strong> {{ result.certifications_title }}</li>
+      <li><strong>Hobbies:</strong> {{ result.hobbies }}</li>
+      <li><strong>Volunteer Activities:</strong> {{ result.volunteer_activities }}</li>
+      <li><strong>School Projects:</strong> {{ result.school_projects }}</li>
+      <li><strong>Availability:</strong> {{ result.availability }}</li>
+    </ul>
+  {% endif %}
+  
+  <a href="{{ url_for('main.home') }}" class="btn">Back to Home</a>
+{% endblock %}

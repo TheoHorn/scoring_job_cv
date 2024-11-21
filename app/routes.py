@@ -1,7 +1,10 @@
-from flask import Blueprint, render_template, request, abort
+from flask import Blueprint, render_template, request, abort, jsonify, redirect, url_for
 import pandas as pd
 import ast
-
+import os 
+import cohere
+import json
+import re
 main = Blueprint('main', __name__)
 
 # Loda data
@@ -128,6 +131,149 @@ def list_resumes():
         total_pages=total_pages
     )
 
+from PyPDF2 import PdfReader
+
+API_KEY = "PnKSZ7AFasSX81TgZWgASYdIyypiInXdghzZh4g4"
+co = cohere.Client(API_KEY)
+
+# Function to clean the response from Cohere
+def clean_response(response_text):
+    response_text = response_text.strip()
+
+    # Look for valid JSON in the response
+    json_match = re.search(r"{.*}", response_text, re.DOTALL)
+
+    if not json_match:
+        print("No valid JSON found in the response.")
+        return {
+            "candidate_id": None,
+            "education_school": None,
+            "education_speciality": [],
+            "education_level": None,
+            "education_degree": None,
+            "experience_years": None,
+            "language": [],
+            "language_level": [],
+            "technical_skills": [],
+            "soft_skills": [],
+            "current_position": None,
+            "location": None,
+            "location_available": [],
+            "certifications_title": [],
+            "hobbies": [],
+            "volunteer_activities": [],
+            "school_projects": [],
+            "availability": None,
+        }
+
+    # Extract valid JSON text
+    json_text = json_match.group()
+
+    try:
+        return json.loads(json_text)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+        return {
+            "candidate_id": None,
+            "education_school": None,
+            "education_speciality": [],
+            "education_level": None,
+            "education_degree": None,
+            "experience_years": None,
+            "language": [],
+            "language_level": [],
+            "technical_skills": [],
+            "soft_skills": [],
+            "current_position": None,
+            "location": None,
+            "location_available": [],
+            "certifications_title": [],
+            "hobbies": [],
+            "volunteer_activities": [],
+            "school_projects": [],
+            "availability": None,
+        }
+
+# Function to analyze the CV with Cohere
+def analyze_cv_with_cohere(cv_text, candidate_id):
+    prompt = f"""
+    You are an expert CV analyzer. Analyze the following CV text and extract relevant details to create a structured dataset for job matching.
+
+    Extract the following details:
+    - Candidate ID: The unique identifier of the candidate.
+    - Education School: Name of the school or institution.
+    - Education Speciality: Fields of study (e.g., "Computer Science", "Marketing").
+    - Education Level: Academic level completed (e.g., "Bachelor's", "Master's", "PhD").
+    - Education Degree: Name of the degree (e.g., "Master of Science", "Bachelor of Arts").
+    - Experience Years: Number of years of professional experience.
+    - Language: List of languages known.
+    - Language Level: Proficiency level for each language (e.g., "Beginner", "Intermediate", "Advanced").
+    - Technical Skills: List of technical skills mentioned in the CV.
+    - Soft Skills: List of soft skills mentioned in the CV.
+    - Current Position: Current job title (if mentioned).
+    - Location: Current location of the candidate.
+    - Location Available: List of locations the candidate is willing to work in.
+    - Certifications Title: Titles of certifications obtained.
+    - Hobbies: Hobbies or personal interests.
+    - Volunteer Activities: List of volunteer or extracurricular activities.
+    - School Projects: List of academic projects completed.
+    - Availability: Candidate's availability for a new role (e.g., "Immediate", "1 month notice").
+
+    CV Text: {cv_text}
+
+    Provide the output in this JSON format:
+    {{
+        "candidate_id": "{candidate_id}",
+        "education_school": "value",
+        "education_speciality": ["speciality1", "speciality2", ...],
+        "education_level": "value",
+        "education_degree": "value",
+        "experience_years": number,
+        "language": ["language1", "language2", ...],
+        "language_level": ["level1", "level2", ...],
+        "technical_skills": ["skill1", "skill2", ...],
+        "soft_skills": ["soft_skill1", "soft_skill2", ...],
+        "current_position": "value",
+        "location": "City, State, Country",
+        "location_available": ["City1, State1, Country1", ...],
+        "certifications_title": ["certification1", "certification2", ...],
+        "hobbies": ["hobby1", "hobby2", ...],
+        "volunteer_activities": ["activity1", "activity2", ...],
+        "school_projects": ["project1", "project2", ...],
+        "availability": "value"
+    }}
+    """
+    response = co.generate(
+        model="command-xlarge-nightly",
+        prompt=prompt,
+        max_tokens=500,
+        temperature=0.7
+    )
+    raw_text = response.generations[0].text.strip()
+    return clean_response(raw_text)
+
+# Route to handle the matching page and PDF upload
+@main.route('/score', methods=['GET', 'POST'])
+def score():
+    result = None
+
+    if request.method == 'POST':
+        # Get the uploaded PDF file
+        pdf_file = request.files['pdf']
+        if pdf_file:
+            # Read the PDF and extract text
+            pdf_path = pdf_file.filename
+            reader = PdfReader(pdf_file)
+            cv_text = ""
+            for page in reader.pages:
+                cv_text += page.extract_text()
+
+            # Analyze the CV using Cohere API
+            candidate_id = 1  # You can adjust this ID logic as needed
+            result = analyze_cv_with_cohere(cv_text, candidate_id)
+
+    # Render the page with the extracted data
+    return render_template('score.html', result=result)
 
 @main.route('/resumes/<int:resume_id>')
 def view_resume(resume_id):
