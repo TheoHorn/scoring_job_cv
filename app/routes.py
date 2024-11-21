@@ -240,6 +240,7 @@ def analyze_cv_with_cohere(cv_text, candidate_id):
 
 # Ajouter un CV à la table
 def add_cv_to_table(cv_text, table_path):
+    global resumes
     # Vérifier si le fichier existe
     if os.path.exists(table_path):
         df = pd.read_csv(table_path)
@@ -273,7 +274,88 @@ def add_cv_to_table(cv_text, table_path):
 
     # Sauvegarder le fichier mis à jour
     df.to_csv(table_path, index=False)
-    print(f"Le CV a été ajouté avec succès dans {table_path}.")
+    new_html = f"""<div class="cv-container">
+        <!-- CV Header -->
+        <div class="cv-header">
+            <h1>CV</h1>
+            <p><strong>Location:</strong> { df['location'] }</p>
+            <p><strong>Current Position:</strong> { df['current_position'] }</p>
+        </div>
+
+        <!-- Education Section -->
+        <div class="section-title">Education</div>
+        <div class="section-content">
+            <p><strong>School:</strong> { df['education_school']}</p>
+            <p><strong>Speciality:</strong> { df['education_speciality']}</p>
+            <p><strong>Level:</strong> { df['education_level']}</p>
+            <p><strong>Degree:</strong> { df['education_degree']}</p>
+        </div>
+
+        <!-- Experience Section -->
+        <div class="section-title">Experience</div>
+        <div class="section-content">
+            <p><strong>Years of Experience:</strong> {df['experience_years']}</p>
+        </div>
+
+        <!-- Language Skills Section -->
+        <div class="section-title">Language Skills</div>
+        <div class="section-content">
+            <p><strong>Language:</strong> {df['language']}</p>
+            <p><strong>Level:</strong> {df['language_level']}</p>
+        </div>
+
+        <!-- Technical Skills Section -->
+        <div class="section-title">Technical Skills</div>
+        <div class="section-content">
+            <p>{df['technical_skills']}</p>
+        </div>
+
+        <!-- Soft Skills Section -->
+        <div class="section-title">Soft Skills</div>
+        <div class="section-content">
+            <p>{df['soft_skills']}</p>
+        </div>
+
+        <!-- Certifications Section -->
+        <div class="section-title">Certifications</div>
+        <div class="section-content">
+            <p>{df['certifications_title']}</p>
+        </div>
+
+        <!-- Hobbies Section -->
+        <div class="section-title">Hobbies</div>
+        <div class="section-content">
+            <p>{df['hobbies']}</p>
+        </div>
+
+        <!-- Volunteer Activities Section -->
+        <div class="section-title">Volunteer Activities</div>
+        <div class="section-content">
+            <p>{df['volunteer_activities']}</p>
+        </div>
+
+        <!-- School Projects Section -->
+        <div class="section-title">School Projects</div>
+        <div class="section-content">
+            <p>{df['school_projects']}</p>
+        </div>
+
+        <!-- Availability Section -->
+        <div class="section-title">Availability</div>
+        <div class="section-content">
+            <p>{df['availability']}</p>
+        </div>
+
+        <!-- CV Footer -->
+        <div class="cv-footer">
+            <p>Candidate ID: {df['candidate_id']}</p>
+        </div>
+    </div>
+"""
+    df_resume = pd.DataFrame([{'ID': next_id, 'Resume_html': new_html,'Category': "missing"}])
+    new_res= pd.concat([resumes, df_resume], ignore_index=True)
+    new_res.to_csv('data/Resume.csv', index=False)
+    resumes = new_res
 
 # Route to handle the matching page and PDF upload
 @main.route('/score', methods=['GET', 'POST'])

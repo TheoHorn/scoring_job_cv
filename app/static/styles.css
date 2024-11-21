@@ -37,6 +37,44 @@ main {
     background-color: #0056b3;
 }
 
+.cv-container {
+    border: 1px solid #ccc;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+}
+.cv-header {
+    text-align: center;
+}
+.cv-header h1 {
+    margin: 0;
+    color: #2c3e50;
+}
+.cv-header p {
+    margin: 5px 0;
+    color: #7f8c8d;
+}
+.section-title {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+.section-content {
+    margin-top: 10px;
+}
+.section-content p {
+    margin: 5px 0;
+    color: #34495e;
+}
+.cv-footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
 /* Containers */
 .containerAnalysis {
     max-width: 1200px;
