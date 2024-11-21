@@ -6,61 +6,105 @@
     <div class="resume-list">
         {% for resume in resumes %}
         <div class="resume-item">
-            <h3>Resume ID: {{ resume['resume_id'] }} - Score: {{ resume['score_global'] }}</h3>
-            <p class="score-details">Details: {{ resume['score_details'] | join(', ') }}</p>
+            <h3>Resume ID: {{ resume['id_resume'] }} - Score: {{ resume['score'] }}</h3>
+            <p>{{ resume['snippet'] }}</p>
+            <p class="score-details">Details: {{ resume['details'] | join(', ') }}</p>
         </div>
         {% endfor %}
     </div>
+
+    <!-- Selection Panel -->
+    <div class="details-selector">
+        <h3>Select Details to Display:</h3>
+        <form id="detailsForm">
+            {% for i in range(num_details) %}
+            <label>
+                <input type="checkbox" name="details" value="{{ i }}" checked> Detail {{ i + 1 }}
+            </label>
+            {% endfor %}
+        </form>
+    </div>
+
+    <!-- Chart -->
     <div class="chart-container">
         <h2>Score Visualization</h2>
         <canvas id="scoreChart"></canvas>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!--
 <script>
-    const resumes = {{ resumes|tojson }};
-    const thresholds = {{ thresholds|tojson }};
+    const resumes_js = {{ resumes | tojson }};
+    const thresholds_js = {{ thresholds | tojson }};
+    const numDetails = resumes_js[0]?.details.length || 0;
 
-    const labels = resumes.map(resume => `Resume ${resume.resume_id}`);
-    const scores = resumes.map(resume => resume.score_global);
-
-    const thresholdColors = scores.map(score => {
-        if (score >= thresholds.Excellent) return 'rgba(0, 128, 0, 0.7)'; // Excellent: Green
-        if (score >= thresholds.Great) return 'rgba(0, 0, 255, 0.7)';    // Great: Blue
-        if (score >= thresholds.Good) return 'rgba(255, 165, 0, 0.7)';  // Good: Orange
-        return 'rgba(255, 0, 0, 0.7)';                                  // Bad: Red
-    });
-
+    // Chart.js setup variables
+    let chartInstance;
     const ctx = document.getElementById('scoreChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Global Score',
-                data: scores,
-                backgroundColor: thresholdColors,
-                borderColor: 'rgba(0, 0, 0, 0.1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Score'
+
+    // Function to update the chart
+    function updateChart(selectedDetails) {
+        const datasets = resumes_js.map((resume, idx) => ({
+            label: `Resume ${resume.resume_id}`,
+            data: selectedDetails.map(detailIdx => resume.details[detailIdx]),
+            backgroundColor: `rgba(${60 + idx * 30}, ${120 - idx * 20}, ${200 - idx * 30}, 0.8)`,
+            borderColor: 'rgba(0, 0, 0, 0.1)',
+            borderWidth: 1
+        }));
+
+        const labels = selectedDetails.map(detailIdx => `Detail ${detailIdx + 1}`);
+
+        // Destroy the old chart if it exists
+        if (chartInstance) chartInstance.destroy();
+
+        // Create a new chart
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Score'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return `${context.dataset.label}: ${context.raw}`;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'top'
                     }
                 }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                }
             }
+        });
+    }
+
+    // Initial render with all details
+    const allDetails = Array.from({ length: numDetails }, (_, i) => i);
+    updateChart(allDetails);
+
+    // Event listener for checkboxes
+    document.getElementById('detailsForm').addEventListener('change', () => {
+        const selectedDetails = Array.from(
+            document.querySelectorAll('input[name="details"]:checked')
+        ).map(checkbox => parseInt(checkbox.value));
+
+        if (selectedDetails.length > 0) {
+            updateChart(selectedDetails);
+        } else {
+            // If no details are selected, reset to an empty chart
+            chartInstance?.destroy();
         }
     });
-</script>-->
+</script>
 {% endblock %}

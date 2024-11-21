@@ -7,7 +7,7 @@ main = Blueprint('main', __name__)
 # Loda data
 resumes = pd.read_csv('data/Resume.csv', header=0)
 offers = pd.read_csv('data/final_job_offers.csv', header=0)
-#matches = pd.read_csv('data/matches.csv', header=0)
+matches = pd.read_csv('data/matches.csv', header=0)
 
 # Parse columns as a list if necessary
 columns_to_parse = ['job_category','profile','education_speciality','languages','language_level','soft_skills','technical_skills','certifications','platform']
@@ -15,6 +15,10 @@ for column in columns_to_parse:
     offers[column] = offers[column].apply(
         lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith('[') else x
     )
+# Parse 'details' column in matches as a list if necessary
+matches['details'] = matches['details'].apply(
+    lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith('[') else x
+)
 
 # Replace NaN values 
 offers = offers.fillna({'education_level': 'Not specified', 'location': 'Not specified', 'start_date': 'Not specified', 'experience_years':0})
@@ -141,13 +145,12 @@ def view_job(job_id):
 
     return render_template('job.html', job=job)
 
-@main.route('/jobs/<int:job_id>/analysis')
-def job_analysis(job_id):
+@main.route('/jobs/<int:job_id>/matching')
+def matching(job_id):
     # Fetch job-related resumes from the dataframe
-    relevant_resumes = matches[matches['job_offer_id'] == job_id]
-    
+    relevant_resumes = matches[matches['id_offer'] == job_id]
     # Sort by global score and select top 5
-    top_resumes = relevant_resumes.sort_values(by='score_global', ascending=False).head(5)
+    top_resumes = relevant_resumes.sort_values(by='score', ascending=False).head(10)
     
     # Convert to dictionary format for easier rendering in the template
     top_resumes = top_resumes.to_dict(orient='records')
@@ -160,9 +163,42 @@ def job_analysis(job_id):
         "Bad": 0
     }
 
+    # Add a short snippet of the HTML (strip tags for text preview)
+    resume_ids = [resume['id_resume'] for resume in top_resumes]
+    resume_details = resumes[resumes['ID'].isin(resume_ids)][['ID', 'Resume_str']].set_index('ID').to_dict(orient='index')
+    
+    # Add the resume details to the top_resumes
+    for resume in top_resumes:
+        resume_id = resume['id_resume']
+        if resume_id in resume_details:
+            resume['snippet'] = resume_details[resume_id]['Resume_str'][:150] + '...'  # First 150 characters of the str
+        # Find the resume details in the resumes DataFrame
+        else:
+            resume['snippet'] = ''
+
+    # Example ranges for each detail (0-20, 0-10, etc.)
+    detail_ranges = [20, 10, 15, 10, 5, 20, 10, 10]  # Adjust based on your use case
+    normalized_resumes = normalize_details(top_resumes, detail_ranges)    
     return render_template(
         'job_analysis.html',
+        num_details=len(detail_ranges),
         job_id=job_id,
-        resumes=top_resumes,
+        resumes=normalized_resumes,
         thresholds=thresholds
     )
+
+def normalize_details(resumes, detail_ranges):
+    """
+    Normalize the scores of resumes based on the ranges for each detail.
+    Args:
+        resumes: List of resumes with details scores.
+        detail_ranges: List of maximum values for each detail.
+    Returns:
+        Normalized resumes with details scaled between 0 and 1.
+    """
+    for resume in resumes:
+        resume['normalized_details'] = [
+            (score / max_range) * 100 if max_range > 0 else 0
+            for score, max_range in zip(resume['details'], detail_ranges)
+        ]
+    return resumes

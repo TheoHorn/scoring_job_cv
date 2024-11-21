@@ -239,3 +239,57 @@ main {
 canvas {
     max-width: 100%;
 }
+
+/* CHART DETAIL */
+.details-selector {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Adds space between items */
+}
+
+.details-selector label {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.details-selector input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+/* Optional: Add some styling to make the details selection panel look better */
+.details-selector h3 {
+    width: 100%;
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #333;
+}
+
+
+#detailsForm {
+    display: flex;
+    flex-wrap: wrap;  /* Allows wrapping if the checkboxes exceed the container width */
+    gap: 15px; /* Adds space between the checkboxes */
+}
+
+#detailsForm label {
+    display: flex;
+    align-items: center; /* Aligns the checkbox with the label text */
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#detailsForm input[type="checkbox"] {
+    margin-right: 5px; /* Adds space between the checkbox and the label */
+}
+
+/* Optional: Add hover effect for labels */
+#detailsForm label:hover {
+    background-color: #e0f7fa;
+}
