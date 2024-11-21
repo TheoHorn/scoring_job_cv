@@ -37,5 +37,6 @@
     </div>
 
     <a href="{{ url_for('main.list_jobs') }}" class="btn">Back to Job Offers</a>
+    <a href="{{ url_for('main.matching', job_id=job['job_id']) }}" class="btn">See Matching Profiles</a>
 </div>
 {% endblock %}
