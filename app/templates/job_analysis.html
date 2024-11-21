@@ -7,24 +7,25 @@
         {% for resume in resumes %}
         <div class="resume-item">
             <h3>Resume ID: {{ resume['id_resume'] }} - Score: {{ resume['score'] }}</h3>
-            <p>{{ resume['snippet'] }}</p>
-            <p class="score-details">Details: {{ resume['details'] | join(', ') }}</p>
+            <a href="{{ url_for('main.view_resume', resume_id= resume['id_resume']) }}" class="btn">See Resume</a>
         </div>
         {% endfor %}
     </div>
+    
 
     <!-- Selection Panel -->
     <div class="details-selector">
         <h3>Select Details to Display:</h3>
         <form id="detailsForm">
-            {% for i in range(num_details) %}
-            <label>
-                <input type="checkbox" name="details" value="{{ i }}" checked> Detail {{ i + 1 }}
-            </label>
+            {% for detail in string_details %}
+                <label>
+                <input type="checkbox" name="details" value="{{ detail }}" checked> {{ detail }}
+                </label>
             {% endfor %}
         </form>
     </div>
 
+    
     <!-- Chart -->
     <div class="chart-container">
         <h2>Score Visualization</h2>
@@ -34,29 +35,50 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const resumes_js = {{ resumes | tojson }};
-    const thresholds_js = {{ thresholds | tojson }};
-    const numDetails = resumes_js[0]?.details.length || 0;
+    const detailsKeys = {{ string_details | tojson }};
 
-    // Chart.js setup variables
+    // Log the structure of a single resume's normalized data to debug
+    console.log("First Resume Normalized Data:", resumes_js[0]?.normalized);
+    console.log("Details Keys:", detailsKeys);
+
     let chartInstance;
     const ctx = document.getElementById('scoreChart').getContext('2d');
 
-    // Function to update the chart
+    function generateColor(idx) {
+        const colors = [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)'
+        ];
+        return colors[idx % colors.length];
+    }
+
     function updateChart(selectedDetails) {
-        const datasets = resumes_js.map((resume, idx) => ({
-            label: `Resume ${resume.resume_id}`,
-            data: selectedDetails.map(detailIdx => resume.details[detailIdx]),
-            backgroundColor: `rgba(${60 + idx * 30}, ${120 - idx * 20}, ${200 - idx * 30}, 0.8)`,
-            borderColor: 'rgba(0, 0, 0, 0.1)',
-            borderWidth: 1
-        }));
+        console.log("Selected Details:", selectedDetails);
 
-        const labels = selectedDetails.map(detailIdx => `Detail ${detailIdx + 1}`);
+        const datasets = resumes_js.map((resume, idx) => {
+            const data = selectedDetails.map(detailKey => {
+                // Safely access the normalized values after parsing the string to a dictionary
+                const value = resume?.normalized?.[detailKey];
+                console.log(`Resume ${resume.id_resume}, Detail: ${detailKey}, Value: ${value}`);
+                return value !== undefined ? value : 0; // Use 0 if value is undefined
+            });
 
-        // Destroy the old chart if it exists
+            return {
+                label: `Resume ${resume.id_resume}`,
+                data: data,
+                backgroundColor: generateColor(idx),
+                borderColor: 'rgba(0, 0, 0, 0.1)',
+                borderWidth: 1
+            };
+        });
+
+        const labels = selectedDetails;
+
         if (chartInstance) chartInstance.destroy();
 
-        // Create a new chart
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -65,12 +87,12 @@
             },
             options: {
                 scales: {
+                    x: {
+                        title: { display: true, text: 'Details' }
+                    },
                     y: {
                         beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Score'
-                        }
+                        title: { display: true, text: 'Normalized Scores' }
                     }
                 },
                 plugins: {
@@ -81,30 +103,28 @@
                             }
                         }
                     },
-                    legend: {
-                        position: 'top'
-                    }
+                    legend: { position: 'top' }
                 }
             }
         });
     }
 
-    // Initial render with all details
-    const allDetails = Array.from({ length: numDetails }, (_, i) => i);
-    updateChart(allDetails);
+    // Initial render
+    updateChart(detailsKeys);
 
-    // Event listener for checkboxes
     document.getElementById('detailsForm').addEventListener('change', () => {
         const selectedDetails = Array.from(
             document.querySelectorAll('input[name="details"]:checked')
-        ).map(checkbox => parseInt(checkbox.value));
+        ).map(checkbox => detailsKeys[parseInt(checkbox.value)]);
 
         if (selectedDetails.length > 0) {
             updateChart(selectedDetails);
         } else {
-            // If no details are selected, reset to an empty chart
             chartInstance?.destroy();
         }
     });
 </script>
+
+
+
 {% endblock %}
