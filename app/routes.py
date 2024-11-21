@@ -6,6 +6,7 @@ import os
 import cohere
 import json
 import reimport 
+import re
 import app.logic.notation as notation
 import json
 
@@ -159,71 +160,33 @@ co = cohere.Client(API_KEY)
 from werkzeug.utils import secure_filename
 from io import BytesIO
 
-# Function to clean the response from Cohere
+# Fonction pour nettoyer la réponse de Cohere
 def clean_response(response_text):
     response_text = response_text.strip()
 
-    # Look for valid JSON in the response
+    # Rechercher la partie JSON valide
     json_match = re.search(r"{.*}", response_text, re.DOTALL)
 
     if not json_match:
-        print("No valid JSON found in the response.")
-        return {
-            "candidate_id": None,
-            "education_school": None,
-            "education_speciality": [],
-            "education_level": None,
-            "education_degree": None,
-            "experience_years": None,
-            "language": [],
-            "language_level": [],
-            "technical_skills": [],
-            "soft_skills": [],
-            "current_position": None,
-            "location": None,
-            "location_available": [],
-            "certifications_title": [],
-            "hobbies": [],
-            "volunteer_activities": [],
-            "school_projects": [],
-            "availability": None,
-        }
+        print("Aucun JSON valide trouvé dans la réponse brute.")
+        return None
 
-    # Extract valid JSON text
+    # Extraire uniquement le JSON
     json_text = json_match.group()
 
     try:
         return json.loads(json_text)
     except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
-        return {
-            "candidate_id": None,
-            "education_school": None,
-            "education_speciality": [],
-            "education_level": None,
-            "education_degree": None,
-            "experience_years": None,
-            "language": [],
-            "language_level": [],
-            "technical_skills": [],
-            "soft_skills": [],
-            "current_position": None,
-            "location": None,
-            "location_available": [],
-            "certifications_title": [],
-            "hobbies": [],
-            "volunteer_activities": [],
-            "school_projects": [],
-            "availability": None,
-        }
+        print(f"Erreur de décodage JSON : {e}")
+        return None
 
-# Function to analyze the CV with Cohere
+# Analyse avec Cohere (par morceaux)
 def analyze_cv_with_cohere(cv_text, candidate_id):
     prompt = f"""
     You are an expert CV analyzer. Analyze the following CV text and extract relevant details to create a structured dataset for job matching.
 
     Extract the following details:
-    - Candidate ID: The unique identifier of the candidate.
+    - Candidate ID: The unique identifier of the candidate should be an integer.
     - Education School: Name of the school or institution.
     - Education Speciality: Fields of study (e.g., "Computer Science", "Marketing").
     - Education Level: Academic level completed (e.g., "Bachelor's", "Master's", "PhD").
@@ -275,11 +238,48 @@ def analyze_cv_with_cohere(cv_text, candidate_id):
     raw_text = response.generations[0].text.strip()
     return clean_response(raw_text)
 
+# Ajouter un CV à la table
+def add_cv_to_table(cv_text, table_path):
+    # Vérifier si le fichier existe
+    if os.path.exists(table_path):
+        df = pd.read_csv(table_path)
+        next_id = df["candidate_id"].max() + 1
+    else:
+        print(f"{table_path} n'existe pas. Création d'une nouvelle table.")
+        next_id = 1
+        columns = [
+            "candidate_id", "education_school", "education_speciality", "education_level",
+            "education_degree", "experience_years", "language", "language_level",
+            "technical_skills", "soft_skills", "current_position", "location",
+            "location_available", "certifications_title", "hobbies", "volunteer_activities",
+            "school_projects", "availability"
+        ]
+        df = pd.DataFrame(columns=columns)
+
+    # Découper le CV en morceaux
+    cv_chunks = [cv_text[i:i+2000] for i in range(0, len(cv_text), 2000)]
+
+    # Analyser chaque morceau du CV
+    results = []
+    for chunk in cv_chunks:
+        response_raw = analyze_cv_with_cohere(chunk, candidate_id=next_id)
+        if response_raw:
+            results.append(response_raw)
+
+    # Fusionner les résultats si nécessaire
+    if results:
+        merged_result = {key: value for d in results for key, value in d.items()}
+        df = pd.concat([df, pd.DataFrame([merged_result])], ignore_index=True)
+
+    # Sauvegarder le fichier mis à jour
+    df.to_csv(table_path, index=False)
+    print(f"Le CV a été ajouté avec succès dans {table_path}.")
+
 # Route to handle the matching page and PDF upload
 @main.route('/score', methods=['GET', 'POST'])
 def score():
+    global candidates
     result = None
-
     if request.method == 'POST':
         # Get the uploaded PDF file
         pdf_file = request.files['pdf']
@@ -291,12 +291,19 @@ def score():
             for page in reader.pages:
                 cv_text += page.extract_text()
 
+            # Add the CV to the table
+            table_path = 'data/final_candidates_merged.csv'  # Update with actual path
+            add_cv_to_table(cv_text, table_path)
+
             # Analyze the CV using Cohere API
-            candidate_id = 1  # You can adjust this ID logic as needed
+            candidate_id = 1  # Adjust this ID logic if necessary
             result = analyze_cv_with_cohere(cv_text, candidate_id)
 
-    # Render the page with the extracted data
+            candidates = pd.read_csv('data/final_candidates_merged.csv', header=0)
+
+        # Render the page with the extracted data
     return render_template('score.html', result=result)
+
 
 @main.route('/resumes/<int:resume_id>')
 def view_resume(resume_id):

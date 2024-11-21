@@ -1,15 +1,17 @@
-<!-- templates/matching.html -->
+<!-- templates/score.html -->
 {% extends 'base.html' %}
 
 {% block content %}
   <h1>Resume/Offer Matching</h1>
 
+  <!-- Form for uploading CV -->
   <form method="POST" enctype="multipart/form-data" class="upload-form">
     <label for="pdf">Upload your CV:</label>
     <input type="file" name="pdf" id="pdf" required class="input-file">
     <button type="submit" class="submit-btn">Submit</button>
   </form>
 
+  <!-- Display extracted information -->
   {% if result %}
     <h2>Extracted Information:</h2>
     <div class="result-list">
@@ -36,6 +38,7 @@
     </div>
   {% endif %}
   
+  <!-- Back to Home button -->
   <a href="{{ url_for('main.home') }}" class="btn">Back to Home</a>
 
   <style>
