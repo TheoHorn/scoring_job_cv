@@ -155,6 +155,11 @@ def get_scores_by_ids(candidate, job):
     if type(candidate['language_level']) == list:
         candidate['language_level'] = str(candidate['language_level'])
 
+    if type(job['languages']) == list:
+        job['languages'] = str(job['languages'])
+    if type(job['language_level']) == list:
+        job['language_level'] = str(job['language_level'])
+
    
     detailed_scores, max_scores, global_score = calculate_global_score(candidate, job)
     return (global_score, detailed_scores, max_scores)

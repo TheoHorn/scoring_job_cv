@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="containerAnalysis">
+    <h1>Analysis for Resume {{resume_id}}</h1>
+    <div class="resume-list">
+        {% for job in jobs %}
+        <div class="resume-item">
+            <h3>Job ID: {{ job['id_offer'] }} - Score: {{ job['score'] }}</h3>
+            <a href="{{ url_for('main.view_job', job_id=job['id_offer']) }}" class="btn">View Job Offer</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Selection Panel -->
+    <div class="details-selector">
+        <h3>Select Details to Display:</h3>
+        <form id="detailsForm">
+            {% for detail in string_details %}
+                <label>
+                <input type="checkbox" name="details" value="{{ detail }}" checked> {{ detail }}
+                </label>
+            {% endfor %}
+        </form>
+    </div>
+
+    
+    <!-- Chart -->
+    <div class="chart-container">
+        <h2>Score Visualization</h2>
+        <canvas id="scoreChart"></canvas>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const jobs_js = {{ jobs | tojson }};
+    const detailsKeys = {{ string_details | tojson }};
+
+    // Log the structure of a single resume's normalized data to debug
+    console.log("First Resume Normalized Data:", jobs_js[0]?.normalized);
+    console.log("Details Keys:", detailsKeys);
+
+    let chartInstance;
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+
+    function generateColor(idx) {
+        const colors = [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)'
+        ];
+        return colors[idx % colors.length];
+    }
+
+    function updateChart(selectedDetails) {
+        console.log("Selected Details:", selectedDetails);
+
+        const datasets = jobs_js.map((resume, idx) => {
+            const data = selectedDetails.map(detailKey => {
+                // Safely access the normalized values after parsing the string to a dictionary
+                const value = resume?.normalized?.[detailKey];
+                console.log(`Resume ${resume.id_resume}, Detail: ${detailKey}, Value: ${value}`);
+                return value !== undefined ? value : 0; // Use 0 if value is undefined
+            });
+
+            return {
+                label: `Resume ${resume.id_resume}`,
+                data: data,
+                backgroundColor: generateColor(idx),
+                borderColor: 'rgba(0, 0, 0, 0.1)',
+                borderWidth: 1
+            };
+        });
+
+        const labels = selectedDetails;
+
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Details' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Normalized Scores' }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return `${context.dataset.label}: ${context.raw}`;
+                            }
+                        }
+                    },
+                    legend: { position: 'top' }
+                }
+            }
+        });
+    }
+
+    // Initial render
+    updateChart(detailsKeys);
+
+    document.getElementById('detailsForm').addEventListener('change', () => {
+        const selectedDetails = Array.from(
+            document.querySelectorAll('input[name="details"]:checked')
+        ).map(checkbox => detailsKeys[parseInt(checkbox.value)]);
+
+        if (selectedDetails.length > 0) {
+            updateChart(selectedDetails);
+        } else {
+            chartInstance?.destroy();
+        }
+    });
+</script>
+
+
+
+{% endblock %}

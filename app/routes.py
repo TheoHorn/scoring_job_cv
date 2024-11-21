@@ -308,13 +308,71 @@ def score():
 @main.route('/resumes/<int:resume_id>')
 def view_resume(resume_id):
     # Filter the DataFrame to find the resume by ID
+    resume = resumes[resumes['ID'] == resume_id].to_dict(orient='records')
     resume_row = resumes[resumes['ID'] == resume_id]
+    print(resume)
     if resume_row.empty:
         abort(404)  # Return a 404 error if no match is found
     
     # Extract the HTML representation
     resume_html = resume_row.iloc[0]['Resume_html']
-    return render_template('resume.html', resume_html=resume_html)
+    return render_template('resume.html', resume_html=resume_html, resume=resume[0])
+
+
+@main.route('/resumes/<int:resume_id>/matching')
+def matching_resumes(resume_id):
+    # Run Notation.py functions to calculate scores for candidates not already in matches
+    global matches
+    resume = candidates[candidates['candidate_id'] == resume_id].iloc[0]
+    if resume.empty:
+        abort(404, description="Resume ID not analysed.")
+    
+    for _, offer in offers.head(10).iterrows():
+        if not matches[(matches['id_offer'] == offer['job_id']) & (matches['id_resume'] == resume_id)].empty:
+            continue
+
+        # Calculate the score for the candidate
+        (score_global, detailled_scores, normalize_scores) = notation.get_scores_by_ids(resume, offer)
+
+        # Append the new score to the matches DataFrame
+        new_match = {
+            'id_offer': offer['job_id'],
+            'id_resume': resume_id,
+            'score': score_global,
+            'details': detailled_scores,
+            'normalized': normalize_scores
+        }
+
+        matches = pd.concat([matches, pd.DataFrame([new_match])], ignore_index=True)
+
+    # Save the updated matches DataFrame back to the CSV
+    matches.to_csv('data/matches.csv', index=False)
+
+    # Fetch resume-related jobs from the dataframe
+    relevant_jobs = matches[matches['id_resume'] == resume_id]
+
+    # Sort by global score and select top 5
+    top_jobs = relevant_jobs.sort_values(by='score', ascending=False).head(10)
+
+    # Convert to dictionary format for easier rendering in the template
+    top_jobs = top_jobs.to_dict(orient='records')
+
+    for job in top_jobs:
+        if isinstance(job['normalized'], str):
+            job['normalized'] = job['normalized'].replace("'", '"')
+            try:
+                job['normalized'] = json.loads(job['normalized'])
+            except json.JSONDecodeError:
+                job['normalized'] = {}
+    
+    print(top_jobs[0])
+    return render_template(
+        'resume_analysis.html',
+        num_details=len(list(notation.WEIGHTS.values())),
+        resume_id=resume_id,
+        jobs=top_jobs,
+        string_details=list(notation.WEIGHTS.keys())
+    )
 
 
 @main.route('/jobs')
