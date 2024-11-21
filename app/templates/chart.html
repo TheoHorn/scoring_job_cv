@@ -1,21 +1,90 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<h1>Visualisation</h1>
-<canvas id="chart"></canvas>
+<div class="filter-container">
+    <form id="statsForm">
+        <label for="cv_id">CV ID:</label>
+        <input type="text" id="cv_id" name="cv_id" required>
+        
+        <label for="job_offer_id">Job Offer ID:</label>
+        <input type="text" id="job_offer_id" name="job_offer_id" required>
+        
+        <button type="submit" class="btn">Visualiser</button>
+    </form>
+</div>
+
+<div class="chart-container">
+    <h1>Visualisation des Statistiques</h1>
+    <canvas id="skillsChart" width="400" height="200"></canvas>
+    <canvas id="matchChart" width="400" height="200"></canvas>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('chart').getContext('2d');
-    new Chart(ctx, {
+    document.getElementById('statsForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+        const response = await fetch('/chart', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        updateCharts(data);
+    });
+
+    const skillsCtx = document.getElementById('skillsChart').getContext('2d');
+    const matchCtx = document.getElementById('matchChart').getContext('2d');
+
+    let skillsChart = new Chart(skillsCtx, {
         type: 'bar',
         data: {
-            labels: ['Catégorie A', 'Catégorie B'],
+            labels: ['Skills Match', 'Experience Overlap', 'Education Match', 'Industry Relevance'],
             datasets: [{
-                label: 'Données',
-                data: [12, 19],
-                backgroundColor: ['#FF6384', '#36A2EB'],
+                label: 'Score',
+                data: [0, 0, 0, 0],
+                backgroundColor: ['rgba(75, 192, 192, 0.2)'],
+                borderColor: ['rgba(75, 192, 192, 1)'],
+                borderWidth: 1
             }]
         },
-        options: {}
+        options: {
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
     });
+
+    let matchChart = new Chart(matchCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Skills Match', 'Experience Overlap', 'Education Match', 'Industry Relevance'],
+            datasets: [{
+                label: 'Distribution',
+                data: [0, 0, 0, 0],
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+            }]
+        }
+    });
+
+    function updateCharts(data) {
+        skillsChart.data.datasets[0].data = [
+            data.skills_match,
+            data.experience_overlap,
+            data.education_match,
+            data.industry_relevance
+        ];
+        skillsChart.update();
+
+        matchChart.data.datasets[0].data = [
+            data.skills_match,
+            data.experience_overlap,
+            data.education_match,
+            data.industry_relevance
+        ];
+        matchChart.update();
+    }
 </script>
 {% endblock %}
