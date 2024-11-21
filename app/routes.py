@@ -23,8 +23,50 @@ offers = offers.fillna({'education_level': 'Not specified', 'location': 'Not spe
 def home():
     return render_template('dashboard.html', data_summary=resumes.describe().to_html())
 
-@main.route('/chart')
+# Charger vos CSV en mémoire au démarrage
+cv_data = pd.read_csv('data/final_candidates_merged.csv')  # Fichier CSV contenant les informations sur les CVs
+job_offer_data = pd.read_csv('data/final_job_offers.csv')  # Fichier CSV contenant les informations sur les offres d'emploi
+
+# Exemple de fonction pour calculer des statistiques à partir des CSVs
+def get_statistics(cv_id, job_offer_id):
+    # Filtrer les lignes correspondant aux IDs donnés
+    cv = cv_data[cv_data['id'] == int(cv_id)]
+    job_offer = job_offer_data[job_offer_data['id'] == int(job_offer_id)]
+
+    # Vérifiez si les données existent
+    if cv.empty or job_offer.empty:
+        return {"error": "CV ID or Job Offer ID not found."}
+
+    # Simuler des calculs basés sur vos données
+    skills_match = len(set(cv['skills'].values[0].split(',')) & set(job_offer['skills_required'].values[0].split(',')))
+    experience_overlap = abs(cv['years_experience'].values[0] - job_offer['min_experience'].values[0])
+    education_match = int(cv['education_level'].values[0] == job_offer['education_required'].values[0])
+    industry_relevance = len(set(cv['industries'].values[0].split(',')) & set(job_offer['industries_targeted'].values[0].split(',')))
+
+    # Retourner les statistiques calculées
+    return {
+        "skills_match": skills_match,
+        "experience_overlap": experience_overlap,
+        "education_match": education_match,
+        "industry_relevance": industry_relevance
+    }
+
+@main.route('/chart', methods=['GET', 'POST'])
 def chart():
+    if request.method == 'POST':
+        # Récupérez les IDs envoyés par le formulaire
+        cv_id = request.form.get('cv_id')
+        job_offer_id = request.form.get('job_offer_id')
+
+        # Calculer les statistiques
+        stats = get_statistics(cv_id, job_offer_id)
+
+        # Si une erreur existe, renvoyer l'erreur
+        if "error" in stats:
+            return jsonify(stats), 400
+
+        return jsonify(stats)
+
     return render_template('chart.html')
 
 @main.route('/resumes')
