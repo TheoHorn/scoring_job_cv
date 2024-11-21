@@ -439,7 +439,12 @@ def analyze_job_offer_with_cohere(offer_text, job_id):
 def add_job_offer_to_table(offer_text, table_path):
     if os.path.exists(table_path):
         df = pd.read_csv(table_path)
-        next_id = df["job_id"].max() + 1
+        # S'assurer que "job_id" est de type entier
+        if not df.empty and "job_id" in df.columns:
+            df["job_id"] = pd.to_numeric(df["job_id"], errors="coerce").fillna(0).astype(int)
+            next_id = df["job_id"].max() + 1
+        else:
+            next_id = 1
     else:
         print(f"{table_path} does not exist. Creating a new table.")
         next_id = 1
@@ -450,8 +455,10 @@ def add_job_offer_to_table(offer_text, table_path):
         ]
         df = pd.DataFrame(columns=columns)
 
+    # Simule l'analyse avec une fonction "analyze_job_offer_with_cohere"
     response_raw = analyze_job_offer_with_cohere(offer_text, job_id=next_id)
 
+    # Ajouter les nouvelles données à la table
     df = pd.concat([df, pd.DataFrame([response_raw])], ignore_index=True)
     df.to_csv(table_path, index=False)
     print(f"Job offer successfully added to {table_path}.")
