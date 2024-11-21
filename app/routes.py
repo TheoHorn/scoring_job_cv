@@ -136,6 +136,9 @@ from PyPDF2 import PdfReader
 API_KEY = "PnKSZ7AFasSX81TgZWgASYdIyypiInXdghzZh4g4"
 co = cohere.Client(API_KEY)
 
+from werkzeug.utils import secure_filename
+from io import BytesIO
+
 # Function to clean the response from Cohere
 def clean_response(response_text):
     response_text = response_text.strip()
