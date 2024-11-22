@@ -37,7 +37,7 @@
     const detailsKeys = {{ string_details | tojson }};
 
     // Log the structure of a single resume's normalized data to debug
-    console.log("First Resume Normalized Data:", jobs_js[0]?.normalized);
+    console.log("First Job Normalized Data:", jobs_js[0]?.normalized);
     console.log("Details Keys:", detailsKeys);
 
     let chartInstance;
@@ -61,12 +61,12 @@
             const data = selectedDetails.map(detailKey => {
                 // Safely access the normalized values after parsing the string to a dictionary
                 const value = resume?.normalized?.[detailKey];
-                console.log(`Resume ${resume.id_resume}, Detail: ${detailKey}, Value: ${value}`);
+                console.log(`Job ${resume.id_resume}, Detail: ${detailKey}, Value: ${value}`);
                 return value !== undefined ? value : 0; // Use 0 if value is undefined
             });
 
             return {
-                label: `Resume ${resume.id_resume}`,
+                label: `Job ${resume.id_offer}`,
                 data: data,
                 backgroundColor: generateColor(idx),
                 borderColor: 'rgba(0, 0, 0, 0.1)',
