@@ -402,3 +402,61 @@ canvas {
     position: relative;
 }
   
+
+.cv-home-header {
+    background-color: #333;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+.cv-home-main {
+    max-width: 800px;
+    margin: 2rem auto;
+    background: white;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.cv-home-section {
+    margin-bottom: 1.5rem;
+}
+
+.cv-home-section-title {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.cv-home-btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    color: white;
+    background-color: #007BFF;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+.cv-home-btn:hover {
+    background-color: #0056b3;
+}
+
+.cv-home-btn.upload {
+    background-color: #28a745;
+}
+
+.cv-home-btn.upload:hover {
+    background-color: #1e7e34;
+}
+
+.cv-home-footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: #666;
+}

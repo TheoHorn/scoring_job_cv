@@ -81,7 +81,7 @@ def get_statistics(cv_id, job_offer_id):
 
 @main.route('/')
 def home():
-    return render_template('dashboard.html', data_summary=resumes.describe().to_html())
+    return render_template('home.html', data_summary=resumes.describe().to_html())
 
 @main.route('/chart', methods=['POST'])
 def chart():
@@ -437,6 +437,7 @@ def analyze_job_offer_with_cohere(offer_text, job_id):
 
 # Add job offer to the CSV table (same as you already implemented)
 def add_job_offer_to_table(offer_text, table_path):
+    global offers
     if os.path.exists(table_path):
         df = pd.read_csv(table_path)
         # S'assurer que "job_id" est de type entier
@@ -463,9 +464,11 @@ def add_job_offer_to_table(offer_text, table_path):
     df.to_csv(table_path, index=False)
     print(f"Job offer successfully added to {table_path}.")
 
+    offers = pd.read_csv('data/final_job_offers.csv', header=0)
+
 # Route to show the offer submission form
 @main.route('/offers', methods=['GET', 'POST'])
-def offers():
+def offers_view():
     return render_template('offers.html')
 
 # Route to handle the form submission and add job offer to the CSV
@@ -483,6 +486,19 @@ def add_offer():
         return redirect(url_for('main.offers'))
 
     return render_template('offers.html', error="Only PDF files are allowed.")  # Afficher une erreur si ce n'est pas un PDF
+
+@main.route('/resumes/<int:resume_id>')
+def view_resume(resume_id):
+    # Filter the DataFrame to find the resume by ID
+    resume = resumes[resumes['ID'] == resume_id].to_dict(orient='records')
+    resume_row = resumes[resumes['ID'] == resume_id]
+    print(resume)
+    if resume_row.empty:
+        abort(404)  # Return a 404 error if no match is found
+    
+    # Extract the HTML representation
+    resume_html = resume_row.iloc[0]['Resume_html']
+    return render_template('resume.html', resume_html=resume_html, resume=resume[0])
 
 
 @main.route('/resumes/<int:resume_id>/matching')
@@ -544,7 +560,7 @@ def matching_resumes(resume_id):
 @main.route('/jobs')
 def list_jobs():
     # Define relevant columns for the job list
-    relevant_columns = ['job_id', 'job_title', 'job_category', 'location', 'experience_years', 'start_date']
+    relevant_columns = ['job_id', 'job_title', 'job_category', 'location', 'experience_years', 'start_date']    
     filtered_jobs = offers[relevant_columns]
 
     # Get filter parameters from query string
