@@ -38,6 +38,8 @@ def calculate_experience_score(candidate_years, required_years):
         return 1.0
     required_years = float(required_years)
     candidate_years = float(candidate_years) if candidate_years != "missing" else 0
+    if required_years == 0:
+        required_years =1
     return min(candidate_years / required_years, 1.0)
 
 def calculate_language_score(candidate_languages, candidate_levels, job_languages, job_levels):

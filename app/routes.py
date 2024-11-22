@@ -295,12 +295,13 @@ def score():
 
             # Analyze the CV using Cohere API
             candidate_id = candidates['candidate_id'].max()
-            result = analyze_cv_with_cohere(cv_text, candidate_id)
+            result = analyze_cv_with_openai(cv_text, candidate_id)
 
             candidates = pd.read_csv('data/final_candidates_merged.csv', header=0)
     
     visible = request.method == 'POST'  # Determine if the result should be displayed
         # Render the page with the extracted data
+    print(result)
     return render_template('score.html', result=result, visible=visible)
 
 def analyze_job_offer_with_openai(offer_text, job_id):
@@ -406,7 +407,7 @@ def add_offer():
         add_job_offer_to_table(file, table_path)
 
         # Rediriger vers la page des offres après l'ajout
-        return redirect(url_for('main.offers'))
+        return redirect(url_for('main.offers_view'))
 
     return render_template('offers.html', error="Only PDF files are allowed.")  # Afficher une erreur si ce n'est pas un PDF
 
@@ -417,11 +418,105 @@ def view_resume(resume_id):
     resume_row = resumes[resumes['ID'] == resume_id]
     print(resume)
     if resume_row.empty:
-        abort(404)  # Return a 404 error if no match is found
-    
-    # Extract the HTML representation
-    resume_html = resume_row.iloc[0]['Resume_html']
-    return render_template('resume.html', resume_html=resume_html, resume=resume[0])
+        candidate = candidates[candidates['candidate_id'] == resume_id].to_dict(orient='records')
+        
+        if candidate:
+            # Iterate through each record (as it's a list of dictionaries)
+            for record in candidate:
+                # Iterate through each key-value pair in the dictionary
+                for key, value in record.items():
+                    # If the value is a list, convert it to a string
+                    if isinstance(value, list):
+                        # Convert list to a comma-separated string (or any other format you prefer)
+                        record[key] = ', '.join(map(str, value))
+            ncandidate = candidate[0]
+            resume_html = f"""<div class="cv-container">
+                
+                <div class="cv-header">
+                    <h1>CV</h1> 
+                    <p><strong>Location:</strong> {ncandidate['location']}</p>
+                    <p><strong>Current Position:</strong> {ncandidate['current_position']}</p>
+                </div>
+
+                <!-- Education Section -->
+                <div class="section-title">Education</div>
+                <div class="section-content">
+                    <p><strong>School:</strong> {ncandidate['education_school']}</p>
+                    <p><strong>Speciality:</strong> {ncandidate['education_speciality']}</p>
+                    <p><strong>Level:</strong> {ncandidate['education_level']}</p>
+                    <p><strong>Degree:</strong> {ncandidate['education_degree']}</p>
+                </div>
+
+                <!-- Experience Section -->
+                <div class="section-title">Experience</div>
+                <div class="section-content">
+                    <p><strong>Years of Experience:</strong> {ncandidate['experience_years']}</p>
+                </div>
+
+                <!-- Language Skills Section -->
+                <div class="section-title">Language Skills</div>
+                <div class="section-content">
+                    <p><strong>Language:</strong> {ncandidate['language']}</p>
+                    <p><strong>Level:</strong> {ncandidate['language_level']}</p>
+                </div>
+
+                <!-- Technical Skills Section -->
+                <div class="section-title">Technical Skills</div>
+                <div class="section-content">
+                    <p>{ncandidate['technical_skills']}</p>
+                </div>
+
+                <!-- Soft Skills Section -->
+                <div class="section-title">Soft Skills</div>
+                <div class="section-content">
+                    <p>{ncandidate['soft_skills']}</p>
+                </div>
+
+                <!-- Certifications Section -->
+                <div class="section-title">Certifications</div>
+                <div class="section-content">
+                    <p>{ncandidate['certifications_title']}</p>
+                </div>
+
+                <!-- Hobbies Section -->
+                <div class="section-title">Hobbies</div>
+                <div class="section-content">
+                    <p>{ncandidate['hobbies']}</p>
+                </div>
+
+                <!-- Volunteer Activities Section -->
+                <div class="section-title">Volunteer Activities</div>
+                <div class="section-content">
+                    <p>{ncandidate['volunteer_activities']}</p>
+                </div>
+
+                <!-- School Projects Section -->
+                <div class="section-title">School Projects</div>
+                <div class="section-content">
+                    <p>{ncandidate['school_projects']}</p>
+                </div>
+
+                <!-- Availability Section -->
+                <div class="section-title">Availability</div>
+                <div class="section-content">
+                    <p>{ncandidate['availability']}</p>
+                </div>
+
+                <!-- CV Footer -->
+                <div class="cv-footer">
+                    <p>Candidate ID: {ncandidate['candidate_id']}</p>
+                </div>
+            </div>
+            """
+            resume_id = ncandidate['candidate_id']
+            print(resume_id)
+        else:
+            abort(404)
+    else:      
+        # Extract the HTML representation
+        resume_html = resume_row.iloc[0]['Resume_html']
+        resume_id = resume_row.iloc[0]['ID']
+    return render_template('resume.html', resume_html=resume_html,resume_id=resume_id)
 
 
 @main.route('/resumes/<int:resume_id>/matching')
@@ -432,7 +527,7 @@ def matching_resumes(resume_id):
     if resume.empty:
         abort(404, description="Resume ID not analysed.")
     
-    for _, offer in offers.head(10).iterrows():
+    for _, offer in offers.tail(10).iterrows():
         if not matches[(matches['id_offer'] == offer['job_id']) & (matches['id_resume'] == resume_id)].empty:
             continue
 
@@ -549,7 +644,7 @@ def matching(job_id):
     # Run Notation.py functions to calculate scores for candidates not already in matches
     global matches
     offer = offers[offers['job_id'] == job_id].iloc[0]
-    for _, candidate in candidates.head(10).iterrows():
+    for _, candidate in candidates.tail(10).iterrows():
         if not matches[(matches['id_offer'] == job_id) & (matches['id_resume'] == candidate['candidate_id'])].empty:
             continue  # Skip if the candidate is already in the matches
 
