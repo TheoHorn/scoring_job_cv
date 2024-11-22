@@ -484,6 +484,19 @@ def add_offer():
 
     return render_template('offers.html', error="Only PDF files are allowed.")  # Afficher une erreur si ce n'est pas un PDF
 
+@main.route('/resumes/<int:resume_id>')
+def view_resume(resume_id):
+    # Filter the DataFrame to find the resume by ID
+    resume = resumes[resumes['ID'] == resume_id].to_dict(orient='records')
+    resume_row = resumes[resumes['ID'] == resume_id]
+    print(resume)
+    if resume_row.empty:
+        abort(404)  # Return a 404 error if no match is found
+    
+    # Extract the HTML representation
+    resume_html = resume_row.iloc[0]['Resume_html']
+    return render_template('resume.html', resume_html=resume_html, resume=resume[0])
+
 
 @main.route('/resumes/<int:resume_id>/matching')
 def matching_resumes(resume_id):
