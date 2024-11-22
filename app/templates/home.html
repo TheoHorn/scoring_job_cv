@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Header -->
+<div class="cv-home-header">
+    <h1>Welcome to Ponte di Talento</h1>
+    <p>Manage and View Candidate CVs Effortlessly</p>
+</div>
+
+<!-- Main Content -->
+<div class="cv-home-main">
+    <div class="cv-home-section">
+        <div class="cv-home-section-title">Features</div>
+        <ul>
+            <li>View detailed candidate CVs.</li>
+            <li>Post your offers</li>
+            <li>Analyze and compare candidates' scores.</li>
+            <li>See for which job you are the most suitable and analyze where you can perform better</li>
+        </ul>
+    </div>
+
+    <div class="cv-home-section">
+        <div class="cv-home-section-title">Get Started</div>
+        <a href="{{url_for('main.list_resumes')}}" class="cv-home-btn">View All CVs</a>
+        <a href="{{url_for('main.offers_view')}}" class="cv-home-btn upload">Upload your CV</a>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="cv-home-footer">
+    <p>&copy; 2024 Ponte di Talento Application. All rights reserved.</p>
+</div>
+{% endblock %}

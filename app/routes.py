@@ -82,34 +82,7 @@ def get_statistics(cv_id, job_offer_id):
 
 @main.route('/')
 def home():
-    return render_template('dashboard.html', data_summary=resumes.describe().to_html())
-
-@main.route('/chart', methods=['POST'])
-def chart():
-    try:
-        # Get IDs from the request
-        cv_id = int(request.form['cv_id'])
-        job_offer_id = int(request.form['job_offer_id'])
-
-        # Fetch the corresponding rows
-        candidate = candidates_df[candidates_df['candidate_id'] == cv_id].iloc[0]
-        job = job_offers_df[job_offers_df['job_id'] == job_offer_id].iloc[0]
-
-        # Calculate scores
-        detailed_scores, max_scores, global_score = calculate_global_score(candidate, job)
-
-        # Structure the data for the frontend
-        response_data = {
-            "skills_match": detailed_scores["technical_skills"],
-            "experience_overlap": detailed_scores["experience"],
-            "education_match": detailed_scores["education"],
-            "industry_relevance": detailed_scores["job_description"],
-            "global_score": global_score,
-        }
-
-        return jsonify(response_data)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    return render_template('home.html', data_summary=resumes.describe().to_html())
 
 @main.route('/resumes')
 def list_resumes():
@@ -191,7 +164,7 @@ def analyze_cv_with_openai(cv_text, candidate_id):
 
     Extract the following details:
     - Candidate ID: The unique identifier of the candidate should be an integer.
-    - Education School: Name of the school or institution.
+    - Education School: Name of the schools or institutions.
     - Education Speciality: Fields of study (e.g., "Computer Science", "Marketing").
     - Education Level: Academic level completed (e.g., "Bachelor's", "Master's", "PhD").
     - Education Degree: Name of the degree (e.g., "Master of Science", "Bachelor of Arts").
@@ -245,7 +218,12 @@ def analyze_cv_with_openai(cv_text, candidate_id):
     raw_text = response["choices"][0]["message"]["content"].strip()
     return clean_response(raw_text)
 
-
+# Function to check if a value is invalid
+def is_invalid(value):
+    if value is None or isinstance(value, (list, str)) and not value:  # Handle empty lists and empty strings
+        return True
+    invalid_values = {"n/a", "none", "not specified", "not mentionned", "missing"}
+    return str(value).strip().lower() in invalid_values
 # Ajouter un CV à la table
 def add_cv_to_table(cv_text, table_path):
     global resumes
@@ -281,85 +259,15 @@ def add_cv_to_table(cv_text, table_path):
         df = pd.concat([df, pd.DataFrame([merged_result])], ignore_index=True)
 
     # Sauvegarder le fichier mis à jour
-    df.to_csv(table_path, index=False)
-    new_html = f"""<div class="cv-container">
-        <!-- CV Header -->
-        <div class="cv-header">
-            <h1>CV</h1>
-            <p><strong>Location:</strong> { df['location'] }</p>
-            <p><strong>Current Position:</strong> { df['current_position'] }</p>
-        </div>
+    df_final = pd.concat([df, pd.DataFrame([merged_result])], ignore_index=True)
 
-        <!-- Education Section -->
-        <div class="section-title">Education</div>
-        <div class="section-content">
-            <p><strong>School:</strong> { df['education_school']}</p>
-            <p><strong>Speciality:</strong> { df['education_speciality']}</p>
-            <p><strong>Level:</strong> { df['education_level']}</p>
-            <p><strong>Degree:</strong> { df['education_degree']}</p>
-        </div>
+    # Sauvegarder le fichier mis à jour
+    df_final.to_csv(table_path, index=False)
+    df_final = pd.read_csv('data/final_candidates_merged.csv', header=0)
 
-        <!-- Experience Section -->
-        <div class="section-title">Experience</div>
-        <div class="section-content">
-            <p><strong>Years of Experience:</strong> {df['experience_years']}</p>
-        </div>
+    new_html = f"""<div class="resume" id="resume-{next_id}">
+    """
 
-        <!-- Language Skills Section -->
-        <div class="section-title">Language Skills</div>
-        <div class="section-content">
-            <p><strong>Language:</strong> {df['language']}</p>
-            <p><strong>Level:</strong> {df['language_level']}</p>
-        </div>
-
-        <!-- Technical Skills Section -->
-        <div class="section-title">Technical Skills</div>
-        <div class="section-content">
-            <p>{df['technical_skills']}</p>
-        </div>
-
-        <!-- Soft Skills Section -->
-        <div class="section-title">Soft Skills</div>
-        <div class="section-content">
-            <p>{df['soft_skills']}</p>
-        </div>
-
-        <!-- Certifications Section -->
-        <div class="section-title">Certifications</div>
-        <div class="section-content">
-            <p>{df['certifications_title']}</p>
-        </div>
-
-        <!-- Hobbies Section -->
-        <div class="section-title">Hobbies</div>
-        <div class="section-content">
-            <p>{df['hobbies']}</p>
-        </div>
-
-        <!-- Volunteer Activities Section -->
-        <div class="section-title">Volunteer Activities</div>
-        <div class="section-content">
-            <p>{df['volunteer_activities']}</p>
-        </div>
-
-        <!-- School Projects Section -->
-        <div class="section-title">School Projects</div>
-        <div class="section-content">
-            <p>{df['school_projects']}</p>
-        </div>
-
-        <!-- Availability Section -->
-        <div class="section-title">Availability</div>
-        <div class="section-content">
-            <p>{df['availability']}</p>
-        </div>
-
-        <!-- CV Footer -->
-        <div class="cv-footer">
-            <p>Candidate ID: {df['candidate_id']}</p>
-        </div>
-    </div>
-"""
     df_resume = pd.DataFrame([{'ID': next_id, 'Resume_html': new_html,'Category': "missing"}])
     new_res= pd.concat([resumes, df_resume], ignore_index=True)
     new_res.to_csv('data/Resume.csv', index=False)
@@ -386,13 +294,14 @@ def score():
             add_cv_to_table(cv_text, table_path)
 
             # Analyze the CV using Cohere API
-            candidate_id = 1  # Adjust this ID logic if necessary
-            result = analyze_cv_with_openai(cv_text, candidate_id)
+            candidate_id = candidates['candidate_id'].max()
+            result = analyze_cv_with_cohere(cv_text, candidate_id)
 
             candidates = pd.read_csv('data/final_candidates_merged.csv', header=0)
-
+    
+    visible = request.method == 'POST'  # Determine if the result should be displayed
         # Render the page with the extracted data
-    return render_template('score.html', result=result)
+    return render_template('score.html', result=result, visible=visible)
 
 def analyze_job_offer_with_openai(offer_text, job_id):
     """
@@ -451,6 +360,7 @@ def analyze_job_offer_with_openai(offer_text, job_id):
 
 # Add job offer to the CSV table (same as you already implemented)
 def add_job_offer_to_table(offer_text, table_path):
+    global offers
     if os.path.exists(table_path):
         df = pd.read_csv(table_path)
         # S'assurer que "job_id" est de type entier
@@ -477,9 +387,11 @@ def add_job_offer_to_table(offer_text, table_path):
     df.to_csv(table_path, index=False)
     print(f"Job offer successfully added to {table_path}.")
 
+    offers = pd.read_csv('data/final_job_offers.csv', header=0)
+
 # Route to show the offer submission form
 @main.route('/offers', methods=['GET', 'POST'])
-def offers():
+def offers_view():
     return render_template('offers.html')
 
 # Route to handle the form submission and add job offer to the CSV
@@ -497,6 +409,19 @@ def add_offer():
         return redirect(url_for('main.offers'))
 
     return render_template('offers.html', error="Only PDF files are allowed.")  # Afficher une erreur si ce n'est pas un PDF
+
+@main.route('/resumes/<int:resume_id>')
+def view_resume(resume_id):
+    # Filter the DataFrame to find the resume by ID
+    resume = resumes[resumes['ID'] == resume_id].to_dict(orient='records')
+    resume_row = resumes[resumes['ID'] == resume_id]
+    print(resume)
+    if resume_row.empty:
+        abort(404)  # Return a 404 error if no match is found
+    
+    # Extract the HTML representation
+    resume_html = resume_row.iloc[0]['Resume_html']
+    return render_template('resume.html', resume_html=resume_html, resume=resume[0])
 
 
 @main.route('/resumes/<int:resume_id>/matching')
@@ -558,7 +483,7 @@ def matching_resumes(resume_id):
 @main.route('/jobs')
 def list_jobs():
     # Define relevant columns for the job list
-    relevant_columns = ['job_id', 'job_title', 'job_category', 'location', 'experience_years', 'start_date']
+    relevant_columns = ['job_id', 'job_title', 'job_category', 'location', 'experience_years', 'start_date']    
     filtered_jobs = offers[relevant_columns]
 
     # Get filter parameters from query string
