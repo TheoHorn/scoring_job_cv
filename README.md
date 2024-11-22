@@ -17,6 +17,7 @@ To set up the application locally, follow these steps:
 2. Navigate to the project directory: `cd hackaton-job-offer`
 3. Install dependencies: `pip install -r requirements.txt`
 4. Run the application: `python3 run.py`
+5. For running the interview training script, run `python3 -m streamlit run interview/app1.py `
 
 ## Usage
-Once the application is running, open your browser and navigate to `http://localhost:5000`.
+Once the application is running, open your browser and navigate to `http://localhost:5000` for the application and `http://localhost:8501` for the interview training.
