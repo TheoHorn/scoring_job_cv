@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 import ast
 import os 
-import cohere
+#import cohere
+import openai
 import json
 import reimport 
 import re
@@ -154,8 +155,12 @@ def list_resumes():
 
 from PyPDF2 import PdfReader
 
-API_KEY = "PnKSZ7AFasSX81TgZWgASYdIyypiInXdghzZh4g4"
-co = cohere.Client(API_KEY)
+#API_KEY = "PnKSZ7AFasSX81TgZWgASYdIyypiInXdghzZh4g4"
+#co = cohere.Client(API_KEY)
+
+
+OPENAI_API_KEY = "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"  
+openai.api_key = OPENAI_API_KEY
 
 from werkzeug.utils import secure_filename
 from io import BytesIO
@@ -180,8 +185,7 @@ def clean_response(response_text):
         print(f"Erreur de décodage JSON : {e}")
         return None
 
-# Analyse avec Cohere (par morceaux)
-def analyze_cv_with_cohere(cv_text, candidate_id):
+def analyze_cv_with_openai(cv_text, candidate_id):
     prompt = f"""
     You are an expert CV analyzer. Analyze the following CV text and extract relevant details to create a structured dataset for job matching.
 
@@ -229,14 +233,18 @@ def analyze_cv_with_cohere(cv_text, candidate_id):
         "availability": "value"
     }}
     """
-    response = co.generate(
-        model="command-xlarge-nightly",
-        prompt=prompt,
-        max_tokens=500,
-        temperature=0.7
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a professional CV analyzer."},
+            {"role": "user", "content": prompt},
+        ],
+        max_tokens=1000,
+        temperature=0.7,
     )
-    raw_text = response.generations[0].text.strip()
+    raw_text = response["choices"][0]["message"]["content"].strip()
     return clean_response(raw_text)
+
 
 # Ajouter un CV à la table
 def add_cv_to_table(cv_text, table_path):
@@ -263,7 +271,7 @@ def add_cv_to_table(cv_text, table_path):
     # Analyser chaque morceau du CV
     results = []
     for chunk in cv_chunks:
-        response_raw = analyze_cv_with_cohere(chunk, candidate_id=next_id)
+        response_raw = analyze_cv_with_openai(chunk, candidate_id=next_id)
         if response_raw:
             results.append(response_raw)
 
@@ -379,14 +387,17 @@ def score():
 
             # Analyze the CV using Cohere API
             candidate_id = 1  # Adjust this ID logic if necessary
-            result = analyze_cv_with_cohere(cv_text, candidate_id)
+            result = analyze_cv_with_openai(cv_text, candidate_id)
 
             candidates = pd.read_csv('data/final_candidates_merged.csv', header=0)
 
         # Render the page with the extracted data
     return render_template('score.html', result=result)
 
-def analyze_job_offer_with_cohere(offer_text, job_id):
+def analyze_job_offer_with_openai(offer_text, job_id):
+    """
+    Analyse une offre d'emploi à l'aide d'OpenAI et retourne un résultat structuré en JSON.
+    """
     prompt = f"""
     You are an expert job posting analyzer. Your task is to analyze the following job posting and extract relevant details to create a structured dataset for matching with candidate resumes.
 
@@ -395,15 +406,15 @@ def analyze_job_offer_with_cohere(offer_text, job_id):
     - Job Title: Full title of the job.
     - Job Category: Categorize the job into key domains such as "Data Science", "Healthcare", "Finance", etc.
     - Profile: List general profiles required (e.g., "Graduate Student", "Engineer", "Technician", "Manager").
-    - Education Level: Minimum academic level required (e.g., "Bachelor's", "Master's", "PhD","BUT","DUT").
-    - Education Speciality: Extract academic specialities explicitly mentioned or implied in the job posting.Only include existing and relevant fields of study (e.g., "Computer Science", "Marketing", "Data Science").Avoid vague or non-academic terms.
+    - Education Level: Minimum academic level required (e.g., "Bachelor's", "Master's", "PhD", "BUT", "DUT").
+    - Education Speciality: Extract academic specialities explicitly mentioned or implied in the job posting. Only include existing and relevant fields of study (e.g., "Computer Science", "Marketing", "Data Science"). Avoid vague or non-academic terms.
     - Experience Years: Minimum number of years of experience required explicitly mentioned.
     - Languages: List languages required for the job explicitly mentioned.
-    - Language Levels: Proficiency level for each language. It should be one of these : "Beginner", "Intermediate", "Advanced".
+    - Language Levels: Proficiency level for each language. It should be one of these: "Beginner", "Intermediate", "Advanced".
     - Start Date: Mention the start date or specify if it’s "Immediate" or "ASAP".
     - Soft Skills: List key soft skills required (e.g., "Teamwork", "Communication").
     - Technical Skills: List key technical skills required (e.g., "Python", "Cloud Computing").
-    - Certifications: Extract recognized and standard professional certifications explicitly mentioned in the job posting. Include certifications like "AWS Certified Solutions Architect", "PMP Certification", "EMDR Certification", "Licensed to practice law". Ignore generic terms or unverified certifications.
+    - Certifications: Extract recognized and standard professional certifications explicitly mentioned in the job posting. Include certifications like "AWS Certified Solutions Architect", "PMP Certification". Ignore generic terms or unverified certifications.
     - Location: Job location in "City, State, Country" format.
 
     Job Information: {offer_text}
@@ -426,13 +437,16 @@ def analyze_job_offer_with_cohere(offer_text, job_id):
         "location": "City, State, Country"
     }}
     """
-    response = co.generate(
-        model="command-xlarge-nightly",
-        prompt=prompt,
-        max_tokens=500,
-        temperature=0.7
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a professional job posting analyzer."},
+            {"role": "user", "content": prompt},
+        ],
+        max_tokens=1000,
+        temperature=0.7,
     )
-    raw_text = response.generations[0].text.strip()
+    raw_text = response["choices"][0]["message"]["content"].strip()
     return clean_response(raw_text)
 
 # Add job offer to the CSV table (same as you already implemented)
@@ -456,7 +470,7 @@ def add_job_offer_to_table(offer_text, table_path):
         df = pd.DataFrame(columns=columns)
 
     # Simule l'analyse avec une fonction "analyze_job_offer_with_cohere"
-    response_raw = analyze_job_offer_with_cohere(offer_text, job_id=next_id)
+    response_raw = analyze_job_offer_with_openai(offer_text, job_id=next_id)
 
     # Ajouter les nouvelles données à la table
     df = pd.concat([df, pd.DataFrame([response_raw])], ignore_index=True)

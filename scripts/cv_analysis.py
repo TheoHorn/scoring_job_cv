@@ -1,14 +1,14 @@
 import pandas as pd
 import os
-import cohere
+import openai
 import json
 import re
 
-# Configuration for Cohere
-API_KEY = "mOn7gI1TUOROkDHm202ZdZSs4bvdAFZscSPLPd67"  # Replace with your actual Cohere API key
-co = cohere.Client(API_KEY)
+# Configuration for OpenAI
+OPENAI_API_KEY = "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"  # Replace with your actual OpenAI API key
+openai.api_key = OPENAI_API_KEY
 
-# Clean the raw response from Cohere
+# Clean the raw response from OpenAI
 def clean_response(response_text):
     response_text = response_text.strip()
 
@@ -66,8 +66,8 @@ def clean_response(response_text):
             "availability": None,
         }
 
-# Analyze CV text with Cohere
-def analyze_cv_with_cohere(cv_text, candidate_id):
+# Analyze CV text with OpenAI
+def analyze_cv_with_openai(cv_text, candidate_id):
     prompt = f"""
     You are an expert CV analyzer. Analyze the following CV text and extract relevant details to create a structured dataset for job matching.
 
@@ -115,13 +115,16 @@ def analyze_cv_with_cohere(cv_text, candidate_id):
         "availability": "value"
     }}
     """
-    response = co.generate(
-        model="command-xlarge-nightly",
-        prompt=prompt,
-        max_tokens=500,
-        temperature=0.7
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a professional CV analyzer."},
+            {"role": "user", "content": prompt},
+        ],
+        max_tokens=1000,
+        temperature=0.7,
     )
-    raw_text = response.generations[0].text.strip()
+    raw_text = response["choices"][0]["message"]["content"].strip()
     return clean_response(raw_text)
 
 # Add CV to an existing table or create a new one
@@ -143,7 +146,7 @@ def add_cv_to_table(cv_text, table_path):
         df = pd.DataFrame(columns=columns)
 
     # Analyze the CV
-    response_raw = analyze_cv_with_cohere(cv_text, candidate_id=next_id)
+    response_raw = analyze_cv_with_openai(cv_text, candidate_id=next_id)
 
     # Add the CV data to the DataFrame
     df = pd.concat([df, pd.DataFrame([response_raw])], ignore_index=True)
