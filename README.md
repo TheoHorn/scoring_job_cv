@@ -1,4 +1,4 @@
-# Job Offer Analysis Application
+# Job Offer Analysis Application - Talent Bridge
 
 ## Overview
 This application leverages AI to help users find the best job opportunities by analyzing the compatibility between job offers and resumes.
